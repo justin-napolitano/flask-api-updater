@@ -1,0 +1,12 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'build',
+    '-t',
+    'us-west2-docker.pkg.dev/${_PROJECT_NAME}/rss-updater/rss-updater-image:latest',
+    '.'
+  ]
+images:
+- 'us-west2-docker.pkg.dev/${_PROJECT_NAME}/rss-updater/rss-updater-image:latest'
+substitutions:
+  _PROJECT_NAME: smart-axis-421517
