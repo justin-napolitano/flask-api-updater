@@ -380,3 +380,157 @@ If you encounter any issues:
 - **Database Connectivity**: Ensure that your local environment can connect to the database. If you're using a local database, make sure the credentials and host are correct.
 
 
+## Building and Deploying the container to gcp
+
+
+
+### Step 1: Create and Configure Environment Variables
+
+1. **Create a `.env` File**
+
+Create a `.env` file in your project directory with the following content:
+
+```env
+PROJECT_NAME=your-project-name
+PROJECT_NUMBER=67904901121
+REGION=us-west2
+SERVICE_ACCOUNT=your-service-account
+INSTANCE_CONNECTION_NAME=your-instance-connection-name
+DB_USER=your-db-user
+DB_PASS=your-db-password
+DB_NAME=your-db-name
+```
+
+Replace the placeholder values (your-project-name, your-service-account, your-instance-connection-name, your-db-user, your-db-password, and your-db-name) with your actual values.
+
+### Step 2: Manage Secrets
+
+```bash
+#!/bin/bash
+
+# Set your variables in a local .env and source
+source .env
+
+# Enable the Secret Manager API
+gcloud services enable secretmanager.googleapis.com
+
+# Create secrets in Secret Manager
+echo -n $INSTANCE_CONNECTION_NAME | \
+    gcloud secrets create INSTANCE_CONNECTION_NAME --data-file=-
+
+echo -n $DB_USER | \
+    gcloud secrets create DB_USER --data-file=-
+
+echo -n $DB_PASS | \
+    gcloud secrets create DB_PASS --data-file=-
+
+echo -n $DB_NAME | \
+    gcloud secrets create DB_NAME --data-file=-
+
+# Grant access to the Cloud Run service account
+gcloud secrets add-iam-policy-binding INSTANCE_CONNECTION_NAME \
+    --member=serviceAccount:$SERVICE_ACCOUNT \
+    --role=roles/secretmanager.secretAccessor
+
+gcloud secrets add-iam-policy-binding DB_USER \
+    --member=serviceAccount:$SERVICE_ACCOUNT \
+    --role=roles/secretmanager.secretAccessor
+
+gcloud secrets add-iam-policy-binding DB_PASS \
+    --member=serviceAccount:$SERVICE_ACCOUNT \
+    --role=roles/secretmanager.secretAccessor
+
+gcloud secrets add-iam-policy-binding DB_NAME \
+    --member=serviceAccount:$SERVICE_ACCOUNT \
+    --role=roles/secretmanager.secretAccessor
+```
+
+### Create the Artifact Repository
+
+Create
+
+```bash
+#!/bin/bash
+
+# Set your variables in a local .env and source
+source .env
+
+# Create the Artifact Registry repository
+gcloud artifacts repositories create rss-updated \
+    --repository-format=docker \
+    --location=$REGION \
+    --description="Docker repository for RSS Updater"
+
+# Verify the repository creation
+gcloud artifacts repositories list --location=$REGION
+
+```
+
+Make sure to chmod +x the script
+
+### Build the Docker Image with Cloud Build
+
+#### Create cloudbuild.yaml
+
+```yaml
+
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'build',
+    '-t',
+    'us-west2-docker.pkg.dev/${_PROJECT_NAME}/rss-updated/rss-updated-image:latest',
+    '.'
+  ]
+images:
+- 'us-west2-docker.pkg.dev/${_PROJECT_NAME}/rss-updated/rss-updated-image:latest'
+substitutions:
+  _PROJECT_NAME: "your-project-name"
+```
+
+#### Trigger the Build
+
+```bash
+
+#!/bin/bash
+
+# Set your variables in a local .env and source
+source .env
+
+# Trigger the Cloud Build with custom substitution
+gcloud builds submit --config=cloudbuild.yaml --substitutions=_PROJECT_NAME=$PROJECT_NAME
+
+```
+
+```bash
+chmod +x trigger_cloud_build.sh
+./trigger_cloud_build.sh
+```
+
+#### Deploy to Cloud Run
+
+```bash
+
+#!/bin/bash
+
+# Set your variables in a local .env and source
+source .env
+
+# Deploy to Cloud Run
+gcloud run deploy rss-updated \
+    --image us-west2-docker.pkg.dev/$PROJECT_NAME/rss-updated/rss-updated-image:latest \
+    --platform managed \
+    --region $REGION \
+    --allow-unauthenticated \
+    --update-secrets INSTANCE_CONNECTION_NAME=INSTANCE_CONNECTION_NAME:latest \
+    --update-secrets DB_USER=DB_USER:latest \
+    --update-secrets DB_PASS=DB_PASS:latest \
+    --update-secrets DB_NAME=DB_NAME:latest
+```
+
+```bash
+
+chmod +x deploy_to_cloud_run.sh
+./deploy_to_cloud_run.sh
+```
+
