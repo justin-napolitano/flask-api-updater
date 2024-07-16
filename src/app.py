@@ -56,31 +56,59 @@ def update_builds():
     atom_link_rel = data.get('atom_link_rel')
     atom_link_type = data.get('atom_link_type')
 
-    stmt = sqlalchemy.text(
+    stmt_select = sqlalchemy.text(
+        "SELECT lastBuildDate FROM builds WHERE link = :link"
+    )
+    stmt_insert = sqlalchemy.text(
         "INSERT INTO builds (title, link, description, generator, language, copyright, lastBuildDate, atom_link_href, atom_link_rel, atom_link_type) "
         "VALUES (:title, :link, :description, :generator, :language, :copyright, :lastBuildDate, :atom_link_href, :atom_link_rel, :atom_link_type)"
     )
+    stmt_update = sqlalchemy.text(
+        "UPDATE builds SET title = :title, description = :description, generator = :generator, language = :language, "
+        "copyright = :copyright, lastBuildDate = :lastBuildDate, atom_link_href = :atom_link_href, "
+        "atom_link_rel = :atom_link_rel, atom_link_type = :atom_link_type WHERE link = :link"
+    )
+
     try:
         with db.connect() as conn:
-            conn.execute(stmt, parameters={
-                "title": title,
-                "link": link,
-                "description": description,
-                "generator": generator,
-                "language": language,
-                "copyright": copyright,
-                "lastBuildDate": last_build_date,
-                "atom_link_href": atom_link_href,
-                "atom_link_rel": atom_link_rel,
-                "atom_link_type": atom_link_type
-            })
-            conn.commit()
+            result = conn.execute(stmt_select, {"link": link}).fetchone()
+            if result:
+                existing_last_build_date = result[0]
+                if existing_last_build_date != last_build_date:
+                    conn.execute(stmt_update, {
+                        "title": title,
+                        "link": link,
+                        "description": description,
+                        "generator": generator,
+                        "language": language,
+                        "copyright": copyright,
+                        "lastBuildDate": last_build_date,
+                        "atom_link_href": atom_link_href,
+                        "atom_link_rel": atom_link_rel,
+                        "atom_link_type": atom_link_type
+                    })
+                    conn.commit()
+                    return jsonify({'message': 'Build record updated successfully'}), 200
+                else:
+                    return jsonify({'message': 'No update needed for the build record'}), 200
+            else:
+                conn.execute(stmt_insert, {
+                    "title": title,
+                    "link": link,
+                    "description": description,
+                    "generator": generator,
+                    "language": language,
+                    "copyright": copyright,
+                    "lastBuildDate": last_build_date,
+                    "atom_link_href": atom_link_href,
+                    "atom_link_rel": atom_link_rel,
+                    "atom_link_type": atom_link_type
+                })
+                conn.commit()
+                return jsonify({'message': 'Build record added successfully'}), 201
     except Exception as e:
         logger.exception(e)
         return jsonify({'message': 'Error updating builds table'}), 500
-
-    return jsonify({'message': 'Build record added successfully'}), 201
-
 
 
 @app.route('/update/feed', methods=['POST'])
@@ -92,24 +120,46 @@ def update_feed():
     guid = data.get('guid')
     description = data.get('description')
 
-    stmt = sqlalchemy.text(
+    stmt_select = sqlalchemy.text(
+        "SELECT pubDate FROM feed WHERE guid = :guid"
+    )
+    stmt_insert = sqlalchemy.text(
         "INSERT INTO feed (title, link, pubDate, guid, description) VALUES (:title, :link, :pubDate, :guid, :description)"
     )
+    stmt_update = sqlalchemy.text(
+        "UPDATE feed SET title = :title, link = :link, pubDate = :pubDate, description = :description WHERE guid = :guid"
+    )
+
     try:
         with db.connect() as conn:
-            conn.execute(stmt, parameters={
-                "title": title,
-                "link": link,
-                "pubDate": pubDate,
-                "guid": guid,
-                "description": description
-            })
-            conn.commit()
+            result = conn.execute(stmt_select, {"guid": guid}).fetchone()
+            if result:
+                existing_pubDate = result[0]
+                if existing_pubDate != pubDate:
+                    conn.execute(stmt_update, {
+                        "title": title,
+                        "link": link,
+                        "pubDate": pubDate,
+                        "guid": guid,
+                        "description": description
+                    })
+                    conn.commit()
+                    return jsonify({'message': 'Feed record updated successfully'}), 200
+                else:
+                    return jsonify({'message': 'No update needed for the feed record'}), 200
+            else:
+                conn.execute(stmt_insert, {
+                    "title": title,
+                    "link": link,
+                    "pubDate": pubDate,
+                    "guid": guid,
+                    "description": description
+                })
+                conn.commit()
+                return jsonify({'message': 'Feed record added successfully'}), 201
     except Exception as e:
         logger.exception(e)
         return jsonify({'message': 'Error updating feed table'}), 500
-
-    return jsonify({'message': 'Feed record added successfully'}), 201
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=8080)
