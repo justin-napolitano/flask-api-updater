@@ -534,3 +534,61 @@ chmod +x deploy_to_cloud_run.sh
 ./deploy_to_cloud_run.sh
 ```
 
+
+## Updating the Endpoint to account for Existing posts
+
+### Updating the feed endpoint to account for existing 
+
+```python
+
+@app.route('/update/feed', methods=['POST'])
+def update_feed():
+    data = request.json
+    title = data.get('title')
+    link = data.get('link')
+    pubDate = data.get('pubDate')
+    guid = data.get('guid')
+    description = data.get('description')
+
+    stmt_select = sqlalchemy.text(
+        "SELECT pubDate FROM feed WHERE guid = :guid"
+    )
+    stmt_insert = sqlalchemy.text(
+        "INSERT INTO feed (title, link, pubDate, guid, description) VALUES (:title, :link, :pubDate, :guid, :description)"
+    )
+    stmt_update = sqlalchemy.text(
+        "UPDATE feed SET title = :title, link = :link, pubDate = :pubDate, description = :description WHERE guid = :guid"
+    )
+
+    try:
+        with db.connect() as conn:
+            result = conn.execute(stmt_select, {"guid": guid}).fetchone()
+            if result:
+                existing_pubDate = result[0]
+                if existing_pubDate != pubDate:
+                    conn.execute(stmt_update, {
+                        "title": title,
+                        "link": link,
+                        "pubDate": pubDate,
+                        "guid": guid,
+                        "description": description
+                    })
+                    conn.commit()
+                    return jsonify({'message': 'Feed record updated successfully'}), 200
+                else:
+                    return jsonify({'message': 'No update needed for the feed record'}), 200
+            else:
+                conn.execute(stmt_insert, {
+                    "title": title,
+                    "link": link,
+                    "pubDate": pubDate,
+                    "guid": guid,
+                    "description": description
+                })
+                conn.commit()
+                return jsonify({'message': 'Feed record added successfully'}), 201
+    except Exception as e:
+        logger.exception(e)
+        return jsonify({'message': 'Error updating feed table'}), 500
+```
+
