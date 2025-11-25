@@ -1,20 +1,27 @@
 ---
 slug: github-flask-api-updater
 id: github-flask-api-updater
-title: flask-api-updater
+title: Flask API for Updating Google Cloud SQL Databases
 repo: justin-napolitano/flask-api-updater
 githubUrl: https://github.com/justin-napolitano/flask-api-updater
 generatedAt: '2025-11-24T21:34:46.097Z'
 source: github-auto
 summary: >-
-  A Python Flask application designed to update specific tables in a Google
-  Cloud SQL MySQL database. This project demonstrates connecting to Cloud SQL
-  using multiple connection methods and automates updating database records via
-  API endpoints.
-tags: []
-seoPrimaryKeyword: ''
-seoSecondaryKeywords: []
-seoOptimized: false
+  A Flask application that automates updates to Google Cloud SQL MySQL databases
+  via a REST API with multiple connection methods.
+tags:
+  - flask
+  - sqlalchemy
+  - kubernetes
+  - docker
+seoPrimaryKeyword: flask google cloud sql updater
+seoSecondaryKeywords:
+  - flask rest api
+  - google cloud sql connection
+  - docker for flask
+  - kubernetes deployment
+  - sql database automation
+seoOptimized: true
 topicFamily: null
 topicFamilyConfidence: null
 kind: project
