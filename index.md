@@ -6,8 +6,8 @@ repo: justin-napolitano/flask-api-updater
 githubUrl: https://github.com/justin-napolitano/flask-api-updater
 title: GCP Flask App for Updating Database Tables
 summary: >-
-  Learn how to create a Flask app to update database tables in GCP with local
-  service accounts and environmental variables.
+  Learn to create a Flask app that updates database tables in GCP with
+  environmental variables and Docker.
 tags:
   - flask
   - gcp
@@ -16,13 +16,14 @@ tags:
   - python
   - sqlalchemy
   - environment variables
-seoPrimaryKeyword: gcp flask app database updater
+  - cloud-run
+seoPrimaryKeyword: gcp flask app
 seoSecondaryKeywords:
-  - flask app local testing
+  - flask database update
   - gcp service account
-  - docker container setup
-  - environment variables in flask
-  - sqlalchemy integration
+  - dockerize flask app
+  - environmental variables in flask
+  - cloud sql connection
 seoOptimized: true
 ---
 
