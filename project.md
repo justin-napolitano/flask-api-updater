@@ -7,8 +7,8 @@ githubUrl: https://github.com/justin-napolitano/flask-api-updater
 generatedAt: '2025-11-24T21:34:46.097Z'
 source: github-auto
 summary: >-
-  A Flask application to automate updates to Google Cloud SQL MySQL tables via a
-  REST API with multiple connection methods.
+  A Flask application to automate updates to Google Cloud SQL MySQL tables via a REST API with
+  multiple connection methods.
 tags:
   - flask
   - sqlalchemy
@@ -24,8 +24,8 @@ seoSecondaryKeywords:
   - kubernetes manifests
   - python api automation
 seoOptimized: true
-topicFamily: null
-topicFamilyConfidence: null
+topicFamily: automation
+topicFamilyConfidence: 0.9
 kind: project
 entryLayout: project
 showInProjects: true
@@ -151,3 +151,4 @@ flask-api-updater/
 ---
 
 *Note: Some files like `secret.json` contain sensitive information and should be managed securely and excluded from public repositories.*
+
